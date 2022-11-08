@@ -47,12 +47,24 @@ async function run() {
       const result = await reviewCollection.insertOne(review);
       res.send(result);
     });
-    // get all review services
+    // get specific review services
     app.get("/reviews", async (req, res) => {
       let query = {};
       if (req.query.serviceName) {
         query = {
           serviceName: req.query.serviceName,
+        };
+      }
+      const cursor = reviewCollection.find(query);
+      const reviews = await cursor.toArray();
+      res.send(reviews);
+    });
+    // find user specific reviews
+    app.get("/myReviews", async (req, res) => {
+      let query = {};
+      if (req.query.email) {
+        query = {
+          email: req.query.email,
         };
       }
       const cursor = reviewCollection.find(query);
