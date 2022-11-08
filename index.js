@@ -2,24 +2,48 @@ const express = require("express");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const cors = require("cors");
 const app = express();
+const jwt = require("jsonwebtoken");
 app.use(cors());
 const port = process.env.PORT || 5000;
-
+require("dotenv").config();
 app.use(express.json());
 
-const uri =
-  "mongodb+srv://photoUser:Soz9luspqXI8Utgu@cluster0.icyspqk.mongodb.net/?retryWrites=true&w=majority";
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.icyspqk.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   serverApi: ServerApiVersion.v1,
 });
 
+function verifyJwt(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).send({ message: "unauthorized access" });
+  }
+  const token = authHeader.split(" ")[1];
+  jwt.verify(token, process.env.ACCESS_TOKEN, function (err, decoded) {
+    if (err) {
+      return res.status(401).send({ message: "unauthorized access" });
+    }
+    req.decoded = decoded;
+    next();
+  });
+}
+
 async function run() {
   try {
     const serviceCollection = client.db("photoUser").collection("services");
     const reviewCollection = client.db("photoUser").collection("reviews");
     await client.connect();
+    // create jwt token
+    app.post("/jwt", (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN, {
+        expiresIn: "1h",
+      });
+      res.send({ token });
+    });
+
     // find the limit services using get methods
     app.get("/services", async (req, res) => {
       const query = {};
@@ -94,7 +118,11 @@ async function run() {
       res.send(result);
     });
     // find user specific reviews
-    app.get("/myReviews", async (req, res) => {
+    app.get("/myReviews", verifyJwt, async (req, res) => {
+      const decoded = req.decoded;
+      if (decoded.email !== req.query.email) {
+        res.status(403).send({ message: "forbidden" });
+      }
       let query = {};
       if (req.query.email) {
         query = {
