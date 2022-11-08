@@ -41,6 +41,12 @@ async function run() {
       const result = await serviceCollection.findOne(query);
       res.send(result);
     });
+    // post for add allServices
+    app.post("/addService", async (req, res) => {
+      const review = req.body;
+      const result = await serviceCollection.insertOne(review);
+      res.send(result);
+    });
     // post for all reviews
     app.post("/reviews", async (req, res) => {
       const review = req.body;
@@ -64,6 +70,27 @@ async function run() {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
       const result = await reviewCollection.deleteOne(query);
+      res.send(result);
+    });
+    // update a single user information from here
+
+    app.put("/myReviews/:id", async (req, res) => {
+      const id = req.params.id;
+      const updateUser = req.body;
+      const filter = { _id: ObjectId(id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          serviceName: updateUser.serviceName,
+          date: updateUser.date,
+          message: updateUser.message,
+        },
+      };
+      const result = await reviewCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
       res.send(result);
     });
     // find user specific reviews
