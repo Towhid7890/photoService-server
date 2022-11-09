@@ -39,7 +39,7 @@ async function run() {
     app.post("/jwt", (req, res) => {
       const user = req.body;
       const token = jwt.sign(user, process.env.ACCESS_TOKEN, {
-        expiresIn: "1h",
+        expiresIn: "1d",
       });
       res.send({ token });
     });
@@ -145,3 +145,4 @@ app.get("/", (req, res) => {
 app.listen(port, () => {
   console.log(`PhotoService Server running ${port}`);
 });
+module.exports = app;
