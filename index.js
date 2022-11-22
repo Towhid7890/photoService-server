@@ -34,7 +34,7 @@ async function run() {
   try {
     const serviceCollection = client.db("photoUser").collection("services");
     const reviewCollection = client.db("photoUser").collection("reviews");
-    await client.connect();
+
     // create jwt token
     app.post("/jwt", (req, res) => {
       const user = req.body;
